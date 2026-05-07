@@ -1,0 +1,10 @@
+.env
+*.log
+node_modules/
+dist/
+artifacts/
+.docker-config/
+__pycache__/
+*.pyc
+.venv/
+.vscode/settings.json
