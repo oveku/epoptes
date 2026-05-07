@@ -4,7 +4,7 @@
 
 The project deliberately uses standard observability tools (OpenTelemetry Collector, Tempo, Prometheus, Grafana) rather than building a custom trace stack. A small FastAPI service maps raw traces into curated sessions for a React dashboard.
 
-> **Status:** active development, single-operator home-lab grade. See [Roadmap to public release](#roadmap-to-public-release) before publishing.
+> **Status:** active development, single-operator home-lab grade. Designed for a trusted LAN. See [SECURITY.md](SECURITY.md) before exposing it anywhere reachable from the public internet.
 
 ## Why the name?
 
@@ -56,7 +56,7 @@ epoptes-web (5174)
 | File | Purpose |
 |------|---------|
 | `docker-compose.yml` | Local development — builds images from source, exposes Postgres for inspection |
-| `docker-compose.san.yml` | Remote runtime host — uses pre-built images, locked-down ports |
+| `docker-compose.prod.yml` | Remote runtime host — uses pre-built images, requires strong passwords, no insecure defaults |
 
 The remote compose file expects pre-built images and is parameterised through environment variables so the same file works on any host.
 
@@ -119,9 +119,9 @@ For multi-architecture / remote-runtime deployments the build pattern is:
 1. Build API and web images on a build host that matches the target architecture
 2. Save the images as tar archives
 3. Transfer the archives to the runtime host
-4. Load the images and start `docker-compose.san.yml`
+4. Load the images and start `docker-compose.prod.yml`
 
-A reference PowerShell script lives in [`scripts/build-and-deploy.ps1`](scripts/build-and-deploy.ps1). It is currently parameterised for the project author's hosts; adapt the `$GhostHost`, `$SanHost`, and path variables to your infrastructure or replace it with your own CI flow.
+A reference PowerShell script lives in [`scripts/build-and-deploy.ps1`](scripts/build-and-deploy.ps1). It accepts `-BuildHost`, `-RuntimeHost`, `-RuntimePath` parameters (or matching `EPOPTES_BUILD_HOST` / `EPOPTES_RUNTIME_HOST` / `EPOPTES_RUNTIME_PATH` environment variables) and works with any SSH-reachable build and runtime hosts.
 
 ## Configuration
 
@@ -153,21 +153,10 @@ scripts/          Build, deploy, check, smoke-test scripts
 docs/             Architecture, networking, troubleshooting, VS Code setup
 ```
 
-## Roadmap to public release
+## Contributing
 
-This repo is currently **private**. Items to address before making it public:
-
-- [ ] Add a `LICENSE` file (MIT recommended)
-- [ ] Replace remaining personal hostnames / IPs in `docs/`, `AGENTS.md`, `docker-compose.san.yml`, and `scripts/` with placeholders
-- [ ] Generalise `scripts/build-and-deploy.ps1` (or convert to `.example`)
-- [ ] Strengthen `.env.example` placeholders and remove weak compose defaults (`${VAR:?...}` instead of `${VAR:-admin}`)
-- [ ] Add `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`
-- [ ] Expand `.gitignore` (IDE, OS, Python/Node caches, `.env.*`)
-- [ ] Decide whether internal `agent-prompts/` and `AFTERNOON-RUNBOOK.md` stay or move
-- [ ] Re-run `pip-audit` / `npm audit` and update pinned versions
-
-See the open-source readiness audit (May 2026) for the full list and per-file findings.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and PR guidelines. For security issues, see [SECURITY.md](SECURITY.md).
 
 ## License
 
-Not yet licensed for public use. All rights reserved by the author until a `LICENSE` file is added.
+[MIT](LICENSE) © 2026 oveku

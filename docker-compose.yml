@@ -43,7 +43,7 @@ services:
     image: grafana/grafana:11.0.0
     container_name: epoptes-grafana
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set in .env}
       GF_AUTH_ANONYMOUS_ENABLED: "false"
       GF_USERS_DEFAULT_THEME: dark
     volumes:
@@ -63,7 +63,7 @@ services:
     container_name: epoptes-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-epoptes}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-epoptes}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
       POSTGRES_DB: ${POSTGRES_DB:-epoptes}
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -80,7 +80,7 @@ services:
     build: ./api
     container_name: epoptes-api
     environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-epoptes}:${POSTGRES_PASSWORD:-epoptes}@postgres:5432/${POSTGRES_DB:-epoptes}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-epoptes}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres:5432/${POSTGRES_DB:-epoptes}
       TEMPO_BASE_URL: ${TEMPO_BASE_URL:-http://tempo:3200}
       TEMPO_QUERY_LIMIT: ${TEMPO_QUERY_LIMIT:-50}
     ports:

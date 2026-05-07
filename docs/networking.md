@@ -8,19 +8,21 @@ Use:
 http://localhost:4318
 ```
 
-## Home server
+## Remote (LAN) host
 
 Use:
 
 ```text
-http://<server-ip>:4318
+http://<server-ip-or-hostname>:4318
 ```
 
-Example:
+Example with a placeholder LAN IP:
 
 ```text
-http://192.168.1.124:4318
+http://10.0.0.42:4318
 ```
+
+Define `EPOPTES_HOST` in your client `.env` or set it directly in the VS Code OTLP endpoint setting.
 
 ## Firewall
 
@@ -54,4 +56,4 @@ sudo ufw allow 5174/tcp
 
 ## Do not expose publicly
 
-Do not route this through public DNS or reverse proxy until authentication, TLS and retention are designed properly.
+Do not route this through public DNS or a reverse proxy until authentication, TLS, and retention have been designed properly. See [SECURITY.md](../SECURITY.md).

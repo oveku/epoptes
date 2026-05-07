@@ -6,41 +6,30 @@ Use VS Code 1.119+ for OpenTelemetry tracing from Copilot Chat agent sessions.
 
 ## User settings
 
-Install from this project:
+Install from this project (Windows):
 
 ```powershell
-.\scripts\install-vscode-integration.ps1
+.\scripts\install-vscode-integration.ps1 -Endpoint http://<EPOPTES_HOST>:4318
 ```
 
 The installer backs up and updates:
 
 ```text
-C:\Users\<you>\AppData\Roaming\Code\User\settings.json
+%APPDATA%\Code\User\settings.json
 ```
 
-Manual setup is also possible. Open Command Palette:
+Manual setup is also possible. Open the Command Palette:
 
 ```text
 Preferences: Open User Settings (JSON)
 ```
 
-Add:
+Add (replace `<EPOPTES_HOST>` with `localhost` or your server's address):
 
 ```json
 {
   "github.copilot.chat.otel.enabled": true,
-  "github.copilot.chat.otel.otlpEndpoint": "http://localhost:4318",
-  "github.copilot.chat.agent.modelDetails.enabled": true,
-  "github.copilot.chat.agent.backgroundTodoAgent.enabled": true
-}
-```
-
-For a server on the home LAN:
-
-```json
-{
-  "github.copilot.chat.otel.enabled": true,
-  "github.copilot.chat.otel.otlpEndpoint": "http://192.168.1.124:4318",
+  "github.copilot.chat.otel.otlpEndpoint": "http://<EPOPTES_HOST>:4318",
   "github.copilot.chat.agent.modelDetails.enabled": true,
   "github.copilot.chat.agent.backgroundTodoAgent.enabled": true
 }
@@ -48,7 +37,7 @@ For a server on the home LAN:
 
 ## Optional sandbox setting
 
-For trusted home development environments only:
+For trusted local development environments only:
 
 ```json
 {
@@ -63,26 +52,25 @@ This keeps filesystem restrictions but removes network domain blocking. Do not e
 First send a synthetic client trace:
 
 ```powershell
-.\scripts\send-smoke-trace.ps1
+.\scripts\send-smoke-trace.ps1 -Endpoint http://<EPOPTES_HOST>:4318
 ```
 
 Then ask an agent to do a tiny task in a harmless repo, for example:
-
 
 ```text
 Create a README section that explains how to run tests. Do not change code.
 ```
 
-Then check:
+Then check the collector logs (locally or via SSH to your runtime host):
 
 ```bash
-ssh san "sudo docker logs epoptes-otel-collector --tail 200"
+docker logs epoptes-otel-collector --tail 200
 ```
 
 Open Grafana:
 
 ```text
-http://192.168.1.124:3030
+http://<EPOPTES_HOST>:3030
 ```
 
 Use Explore -> Tempo -> Search.

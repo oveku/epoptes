@@ -1,3 +1,8 @@
+# Production compose: pre-built images, locked-down ports, no insecure defaults.
+#
+# Set EPOPTES_HOST, GRAFANA_ADMIN_PASSWORD, and POSTGRES_PASSWORD in .env before starting.
+# The stack will refuse to start if the required passwords are unset.
+
 name: epoptes
 
 services:
@@ -43,10 +48,10 @@ services:
     image: grafana/grafana:11.0.0
     container_name: epoptes-grafana
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set in .env}
       GF_AUTH_ANONYMOUS_ENABLED: "false"
       GF_USERS_DEFAULT_THEME: dark
-      GF_SERVER_ROOT_URL: http://192.168.1.124:${EPOPTES_GRAFANA_PORT:-3030}
+      GF_SERVER_ROOT_URL: http://${EPOPTES_HOST:-localhost}:${EPOPTES_GRAFANA_PORT:-3030}
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
@@ -64,24 +69,31 @@ services:
     container_name: epoptes-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-epoptes}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-epoptes}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
       POSTGRES_DB: ${POSTGRES_DB:-epoptes}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-epoptes}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   api:
     image: ${EPOPTES_API_IMAGE:-epoptes-api:latest}
     container_name: epoptes-api
     environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-epoptes}:${POSTGRES_PASSWORD:-epoptes}@postgres:5432/${POSTGRES_DB:-epoptes}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-epoptes}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres:5432/${POSTGRES_DB:-epoptes}
       TEMPO_BASE_URL: ${TEMPO_BASE_URL:-http://tempo:3200}
       TEMPO_QUERY_LIMIT: ${TEMPO_QUERY_LIMIT:-50}
     ports:
       - "${EPOPTES_API_PORT:-8180}:8080"
     depends_on:
-      - postgres
-      - tempo
+      postgres:
+        condition: service_healthy
+      tempo:
+        condition: service_started
     restart: unless-stopped
 
   web:

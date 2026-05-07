@@ -1,10 +1,44 @@
+# Local environment
 .env
+.env.*
+!.env.example
+
+# Logs
 *.log
+npm-debug.log*
+yarn-error.log
+
+# Build / dependency caches
 node_modules/
 dist/
-artifacts/
-.docker-config/
+build/
+.vite/
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
 .venv/
-.vscode/settings.json
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local artifacts
+artifacts/
+.docker-config/
+*.tar
+*.tar.gz
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

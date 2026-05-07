@@ -42,7 +42,7 @@ function App() {
     <main className="shell">
       <header className="hero">
         <div>
-          <p className="eyebrow">Pantheon Observability</p>
+          <p className="eyebrow">Agent Observability</p>
           <h1>Epoptes</h1>
           <p className="subtitle">Local telemetry for VS Code agent sessions.</p>
         </div>

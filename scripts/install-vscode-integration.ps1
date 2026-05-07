@@ -1,5 +1,5 @@
 param(
-    [string]$Endpoint = "http://192.168.1.124:4318",
+    [string]$Endpoint = "http://localhost:4318",
     [ValidateSet("Code", "Code - Insiders")]
     [string]$Target = "Code",
     [switch]$EnableNetworkSandbox,

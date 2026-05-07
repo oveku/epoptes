@@ -25,13 +25,13 @@ New-Item -ItemType Directory -Force -Path $dockerConfig | Out-Null
 Set-Content -Path (Join-Path $dockerConfig "config.json") -Value '{"auths":{}}' -Encoding Ascii
 $env:DOCKER_CONFIG = $dockerConfig
 
-Write-Step "Building API image on GHOST for $Platform"
+Write-Step "Building API image for $Platform"
 $apiBuildArgs = @("build", "--platform", $Platform, "-t", $apiImage, "--load", "./api")
 if ($Builder) { $apiBuildArgs = @("build", "--builder", $Builder, "--platform", $Platform, "-t", $apiImage, "--load", "./api") }
 docker buildx @apiBuildArgs
 if ($LASTEXITCODE -ne 0) { throw "API image build failed" }
 
-Write-Step "Building web image on GHOST for $Platform"
+Write-Step "Building web image for $Platform"
 $webBuildArgs = @("build", "--platform", $Platform, "-t", $webImage, "--load", "./web")
 if ($Builder) { $webBuildArgs = @("build", "--builder", $Builder, "--platform", $Platform, "-t", $webImage, "--load", "./web") }
 docker buildx @webBuildArgs

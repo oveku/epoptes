@@ -4,19 +4,19 @@
 
 ## Purpose
 
-Epoptes is the observability service for Pantheon agent sessions. It receives OpenTelemetry data from VS Code (1.119+) agent sessions, stores traces in Grafana Tempo, exposes metrics through Prometheus, and serves a React dashboard with a FastAPI curated-data layer.
+Epoptes is a self-hosted observability service. It receives OpenTelemetry data from VS Code (1.119+) agent sessions, stores traces in Grafana Tempo, exposes metrics through Prometheus, and serves a React dashboard backed by a FastAPI curated-data layer.
 
 ## Operating Mode
 
-**Autonomous mode**: prefer execution over hesitation, document material assumptions, recover from partial failure, stay aligned to Pantheon conventions.
+**Autonomous mode**: prefer execution over hesitation, document material assumptions, recover from partial failure, stay aligned to project conventions.
 
 ## Non-Negotiable Rules
 
 1. Secrets via env vars -- never hardcoded. Use `.env` + `.env.example`.
 2. Health endpoints -- every service exposes `GET /health` returning `{"status": "healthy"}`.
-3. Builds on GHOST -- ARM64 images are built on GHOST, not on the dev machine. Run `scripts/build-and-deploy.ps1`.
-4. San is the runtime host -- `192.168.1.124`. Use `docker-compose.san.yml` for production.
-5. Do not expose publicly -- no public DNS or reverse proxy until auth, TLS, and retention are designed.
+3. No private hostnames or IPs in tracked content -- use `<EPOPTES_HOST>` placeholders or env vars.
+4. Use `docker-compose.yml` for local dev (builds from source) and `docker-compose.prod.yml` for remote runtime (pre-built images, no insecure defaults).
+5. Do not expose publicly without auth, TLS, and retention design.
 
 ## Service Map
 
@@ -39,32 +39,24 @@ Epoptes is the observability service for Pantheon agent sessions. It receives Op
 - **API**: `api/app/main.py` (FastAPI, Python 3.12)
 - **Web**: `web/src/main.tsx` (React 18, Vite 5)
 - **Scripts**: `scripts/` (build, deploy, check, smoke-test, install-vscode-integration)
-- **Docs**: `docs/` (data-model, networking, pantheon-placement, troubleshooting, vscode-setup)
+- **Docs**: `docs/` (data-model, networking, troubleshooting, vscode-setup)
 - **Local compose**: `docker-compose.yml`
-- **Production compose (San)**: `docker-compose.san.yml`
-
-## Key Agents for This Project
-
-| Agent | Use For |
-|-------|---------|
-| Architect | Adding new routes, models, Grafana dashboards, collector pipelines |
-| Closer | Verifying the stack is up, smoke-testing OTLP ingestion |
-| Reviewer | Auditing OWASP compliance, Docker conventions, FastAPI structure |
-| Documenter | ADRs, release notes, dashboard guides |
+- **Production compose**: `docker-compose.prod.yml`
 
 ## Quick Commands
 
 ```powershell
 # Start locally
 cp .env.example .env
-scripts\start.ps1
+# Set GRAFANA_ADMIN_PASSWORD and POSTGRES_PASSWORD in .env first
+docker compose up -d
 
 # Verify stack health
-scripts\check.ps1
+.\scripts\check.ps1
 
 # Send synthetic trace
-scripts\send-smoke-trace.ps1
+.\scripts\send-smoke-trace.ps1 -Endpoint http://localhost:4318
 
-# Build ARM64 images on GHOST and deploy to San
-scripts\build-and-deploy.ps1
+# Build images on a remote ARM64 build host and deploy to a runtime host
+.\scripts\build-and-deploy.ps1 -BuildHost <build-host> -RuntimeHost <runtime-host> -RuntimePath /opt/epoptes
 ```

@@ -1,5 +1,5 @@
 param(
-    [string]$Endpoint = "http://192.168.1.124:4318",
+    [string]$Endpoint = "http://localhost:4318",
     [string]$ServiceName = "epoptes-vscode-client",
     [string]$SpanName = "epoptes.vscode.integration.smoke"
 )
@@ -38,7 +38,7 @@ $payload = @{
             resource = @{
                 attributes = @(
                     @{ key = "service.name"; value = @{ stringValue = $ServiceName } },
-                    @{ key = "service.namespace"; value = @{ stringValue = "pantheon" } },
+                    @{ key = "service.namespace"; value = @{ stringValue = "epoptes" } },
                     @{ key = "deployment.environment"; value = @{ stringValue = "dev" } },
                     @{ key = "host.name"; value = @{ stringValue = $hostName } }
                 )

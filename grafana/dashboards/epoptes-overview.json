@@ -163,7 +163,6 @@
   "refresh": "10s",
   "schemaVersion": 39,
   "tags": [
-    "pantheon",
     "epoptes",
     "agents"
   ],
