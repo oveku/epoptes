@@ -1,0 +1,112 @@
+# Production compose: pre-built images, locked-down ports, no insecure defaults.
+#
+# Set EPOPTES_HOST, GRAFANA_ADMIN_PASSWORD, and POSTGRES_PASSWORD in .env before starting.
+# The stack will refuse to start if the required passwords are unset.
+
+name: epoptes
+
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.101.0
+    container_name: epoptes-otel-collector
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./collector/otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "${EPOPTES_OTLP_GRPC_PORT:-4317}:4317"
+      - "${EPOPTES_OTLP_HTTP_PORT:-4318}:4318"
+      - "${EPOPTES_COLLECTOR_METRICS_PORT:-8889}:8889"
+    depends_on:
+      - tempo
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:2.5.0
+    container_name: epoptes-tempo
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "${EPOPTES_TEMPO_PORT:-3320}:3200"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: epoptes-prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${EPOPTES_PROMETHEUS_PORT:-9190}:9090"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: epoptes-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set in .env}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_USERS_DEFAULT_THEME: dark
+      GF_SERVER_ROOT_URL: http://${EPOPTES_HOST:-localhost}:${EPOPTES_GRAFANA_PORT:-3030}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "${EPOPTES_GRAFANA_PORT:-3030}:3000"
+    depends_on:
+      - prometheus
+      - tempo
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: epoptes-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-epoptes}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-epoptes}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-epoptes}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    image: ${EPOPTES_API_IMAGE:-epoptes-api:latest}
+    container_name: epoptes-api
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-epoptes}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres:5432/${POSTGRES_DB:-epoptes}
+      TEMPO_BASE_URL: ${TEMPO_BASE_URL:-http://tempo:3200}
+      TEMPO_QUERY_LIMIT: ${TEMPO_QUERY_LIMIT:-50}
+    ports:
+      - "${EPOPTES_API_PORT:-8180}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      tempo:
+        condition: service_started
+    restart: unless-stopped
+
+  web:
+    image: ${EPOPTES_WEB_IMAGE:-epoptes-web:latest}
+    container_name: epoptes-web
+    ports:
+      - "${EPOPTES_WEB_PORT:-5174}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  tempo-data:
+  prometheus-data:
+  grafana-data:
+  postgres-data:

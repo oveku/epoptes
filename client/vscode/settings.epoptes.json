@@ -1,0 +1,6 @@
+{
+  "github.copilot.chat.otel.enabled": true,
+  "github.copilot.chat.otel.otlpEndpoint": "http://<EPOPTES_HOST>:4318",
+  "github.copilot.chat.agent.modelDetails.enabled": true,
+  "github.copilot.chat.agent.backgroundTodoAgent.enabled": true
+}
