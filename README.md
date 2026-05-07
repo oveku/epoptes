@@ -1,64 +1,64 @@
 # Epoptes
 
-**Epoptes** is a local telemetry service for VS Code 1.119+ agent sessions.
+**Epoptes** is a self-hosted observability service for VS Code 1.119+ agent sessions. It collects OpenTelemetry data emitted by GitHub Copilot Chat agents and surfaces it as traces, metrics, and a curated dashboard — so you can see which model ran, which tools were invoked, where time went, and where tokens were spent.
 
-It is designed for a home-lab/Pantheon environment where development machines send OpenTelemetry data from VS Code agents to a local server. The first version uses standard observability tools instead of building a custom trace viewer too early.
+The project deliberately uses standard observability tools (OpenTelemetry Collector, Tempo, Prometheus, Grafana) rather than building a custom trace stack. A small FastAPI service maps raw traces into curated sessions for a React dashboard.
+
+> **Status:** active development, single-operator home-lab grade. See [Roadmap to public release](#roadmap-to-public-release) before publishing.
 
 ## Why the name?
 
-Epoptes means watcher or one who has seen. In Pantheon terms, Epoptes is the observer that reveals what the agents actually did: which model was used, which tools ran, where time went, and where tokens were spent.
+*Epoptes* (Greek: ἐπόπτης, "watcher / one who has seen") fits an observer that reveals what agents actually did.
 
-The name is intentionally not Aletheia. Local Pantheon files already use Aletheia for the truth verification service on Ni, and Argus is already used for the Cerberos vision system.
+## What it does
 
-## MVP goal
-
-A working local stack that can:
-
-- receive OTLP telemetry from VS Code agent sessions
-- store traces in Grafana Tempo
-- expose metrics through Prometheus
-- visualize sessions in Grafana
-- provide a small FastAPI service that reads real session traces from Tempo
-- provide a React dashboard scaffold for the next development step
+- Receives OTLP (HTTP + gRPC) telemetry from VS Code agent sessions
+- Stores traces in Grafana Tempo with 7-day local retention
+- Exposes metrics through Prometheus
+- Visualises sessions in pre-provisioned Grafana dashboards
+- Exposes a FastAPI service that reads real session traces from Tempo
+- Serves a React dashboard with stats cards and a session table
 
 ## Architecture
 
 ```
 VS Code (dev machine)
   │
-  │  OTLP HTTP (port 4318)
+  │  OTLP HTTP (4318) / gRPC (4317)
   ▼
 epoptes-otel-collector
-  ├── traces ──► epoptes-tempo (port 3320)
-  └── metrics ► epoptes-prometheus (port 9190)
-                        │
-                        ▼
-              epoptes-grafana (port 3030)
+  ├── traces  ──► epoptes-tempo (3320)
+  └── metrics ──► epoptes-prometheus (9190)
+                          │
+                          ▼
+                epoptes-grafana (3030)
 
-epoptes-api (port 8180)  ◄──► epoptes-tempo
+epoptes-api (8180)  ◄──► epoptes-tempo
        │
-       └──► epoptes-postgres (future index)
+       └──► epoptes-postgres (reserved for future indexing)
        ▲
        │ REST
-epoptes-web (port 5174)
+epoptes-web (5174)
 ```
 
 | Service | Image | Description |
 |---------|-------|-------------|
-| `otel-collector` | otel/opentelemetry-collector-contrib | Receives OTLP, fans out to Tempo and Prometheus |
-| `tempo` | grafana/tempo | Trace backend; 7-day local retention |
-| `prometheus` | prom/prometheus | Metrics; 7-day TSDB retention |
-| `grafana` | grafana/grafana | Dashboards; pre-provisioned Tempo + Prometheus datasources |
-| `postgres` | postgres:16-alpine | Reserved API database for future indexing |
-| `api` | epoptes-api (built) | FastAPI service that maps Tempo traces into curated sessions and stats |
-| `web` | epoptes-web (built) | React dashboard with stats cards and session table |
+| `otel-collector` | `otel/opentelemetry-collector-contrib` | Receives OTLP, fans out to Tempo and Prometheus |
+| `tempo` | `grafana/tempo` | Trace backend; 7-day local retention |
+| `prometheus` | `prom/prometheus` | Metrics; 7-day TSDB retention |
+| `grafana` | `grafana/grafana` | Dashboards; pre-provisioned Tempo + Prometheus datasources |
+| `postgres` | `postgres:16-alpine` | Reserved API database for future indexing |
+| `api` | `epoptes-api` (built locally) | FastAPI service; maps Tempo traces into curated sessions and stats |
+| `web` | `epoptes-web` (built locally) | React dashboard with stats cards and session table |
 
 ## Compose files
 
-| File | Use for |
+| File | Purpose |
 |------|---------|
-| `docker-compose.yml` | Local development — builds images from source, exposes postgres port |
-| `docker-compose.san.yml` | Production on San (`192.168.1.124`) — uses pre-built ARM64 images, no exposed postgres |
+| `docker-compose.yml` | Local development — builds images from source, exposes Postgres for inspection |
+| `docker-compose.san.yml` | Remote runtime host — uses pre-built images, locked-down ports |
+
+The remote compose file expects pre-built images and is parameterised through environment variables so the same file works on any host.
 
 ## Ports
 
@@ -70,12 +70,15 @@ epoptes-web (port 5174)
 | Prometheus | 9190 | Metrics |
 | Tempo | 3320 | Trace backend |
 | Epoptes API | 8180 | Curated telemetry API |
-| Epoptes Web | 5174 | Local React dashboard |
+| Epoptes Web | 5174 | Dashboard |
+
+Ports are deliberately offset to coexist with other services on a multi-tenant host (avoiding stock `5432`, `3000`, `9090`).
 
 ## Quick start
 
 ```bash
 cp .env.example .env
+# Edit .env and set strong values for GRAFANA_ADMIN_PASSWORD and POSTGRES_PASSWORD
 docker compose up -d
 ```
 
@@ -85,21 +88,11 @@ Open:
 - API health: <http://localhost:8180/health>
 - Web dashboard: <http://localhost:5174>
 
-Default Grafana login:
-
-```text
-admin / admin
-```
+> **Set `GRAFANA_ADMIN_PASSWORD` in `.env` before first start.** The default in `.env.example` is a placeholder.
 
 ## VS Code settings
 
-Use the LAN address of the server running Epoptes.
-
-Install the client-side VS Code settings on a Windows dev machine:
-
-```powershell
-.\scripts\install-vscode-integration.ps1
-```
+Send agent telemetry from a Windows / macOS / Linux dev machine to your Epoptes host:
 
 ```json
 {
@@ -110,49 +103,71 @@ Install the client-side VS Code settings on a Windows dev machine:
 }
 ```
 
-Send a synthetic trace to prove the local client path can reach Epoptes:
+Replace `<EPOPTES_HOST>` with the LAN address or hostname where Epoptes is running (use `localhost` if the stack runs on the same machine).
+
+A helper script is provided for Windows operators:
 
 ```powershell
-.\scripts\send-smoke-trace.ps1
+.\scripts\install-vscode-integration.ps1 -Endpoint http://<EPOPTES_HOST>:4318
+.\scripts\send-smoke-trace.ps1            -Endpoint http://<EPOPTES_HOST>:4318
 ```
 
-Example for San:
+## Build and deployment to a remote host
 
-```json
-{
-  "github.copilot.chat.otel.enabled": true,
-  "github.copilot.chat.otel.otlpEndpoint": "http://192.168.1.124:4318",
-  "github.copilot.chat.agent.modelDetails.enabled": true,
-  "github.copilot.chat.agent.backgroundTodoAgent.enabled": true
-}
-```
+For multi-architecture / remote-runtime deployments the build pattern is:
 
-## Build and deployment
+1. Build API and web images on a build host that matches the target architecture
+2. Save the images as tar archives
+3. Transfer the archives to the runtime host
+4. Load the images and start `docker-compose.san.yml`
 
-The Pantheon rule still applies: code may be edited on Korsair, but production builds happen on GHOST. Epoptes builds ARM64 API and web images on GHOST, transfers those image archives to San, and starts `docker-compose.san.yml` on San.
+A reference PowerShell script lives in [`scripts/build-and-deploy.ps1`](scripts/build-and-deploy.ps1). It is currently parameterised for the project author's hosts; adapt the `$GhostHost`, `$SanHost`, and path variables to your infrastructure or replace it with your own CI flow.
+
+## Configuration
+
+All runtime configuration is via environment variables — see [`.env.example`](.env.example). The API additionally honours:
+
+- `TEMPO_BASE_URL` (default `http://tempo:3200`) — where the API queries Tempo
+- `TEMPO_QUERY_LIMIT` (default `50`) — max traces returned by `/sessions`
+
+## Health and smoke tests
 
 ```powershell
-.\scripts\build-and-deploy.ps1
+.\scripts\check.ps1                # check all containers + endpoints
+.\scripts\send-smoke-trace.ps1     # push a synthetic trace through the collector
 ```
 
-San was selected because it is the integration bridge and kiosk host, already owns MQTT, has Docker available, and is the closest machine to dashboard consumption. The compose ports avoid San's existing PostgreSQL `5432` and existing web service on `3000`.
+Each service exposes `GET /health` returning `{"status": "healthy"}`.
 
-## MVP done means
+## Project layout
 
-- Docker Compose starts cleanly
-- VS Code can send OTLP data to `http://<host>:4318`
-- Collector logs show incoming telemetry
-- Grafana has Prometheus and Tempo datasources
-- A trace with `invoke_agent` appears in Grafana Explore
-- README and docs explain how to reproduce it
+```
+api/              FastAPI service (Python 3.12)
+web/              React 18 + Vite 5 dashboard
+collector/        OpenTelemetry Collector config
+tempo/            Tempo config
+prometheus/       Prometheus config
+grafana/          Grafana provisioning (datasources, dashboards)
+client/vscode/    Reference VS Code settings for dev machines
+scripts/          Build, deploy, check, smoke-test scripts
+docs/             Architecture, networking, troubleshooting, VS Code setup
+```
 
-## Recommended first implementation session
+## Roadmap to public release
 
-1. Start the stack.
-2. Add the VS Code settings.
-3. Run one small Copilot/Claude agent task.
-4. Check collector logs.
-5. Open Grafana Explore.
-6. Verify traces in Tempo.
-7. Commit the working baseline.
-8. Let agents implement curated ingestion and dashboard features next.
+This repo is currently **private**. Items to address before making it public:
+
+- [ ] Add a `LICENSE` file (MIT recommended)
+- [ ] Replace remaining personal hostnames / IPs in `docs/`, `AGENTS.md`, `docker-compose.san.yml`, and `scripts/` with placeholders
+- [ ] Generalise `scripts/build-and-deploy.ps1` (or convert to `.example`)
+- [ ] Strengthen `.env.example` placeholders and remove weak compose defaults (`${VAR:?...}` instead of `${VAR:-admin}`)
+- [ ] Add `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`
+- [ ] Expand `.gitignore` (IDE, OS, Python/Node caches, `.env.*`)
+- [ ] Decide whether internal `agent-prompts/` and `AFTERNOON-RUNBOOK.md` stay or move
+- [ ] Re-run `pip-audit` / `npm audit` and update pinned versions
+
+See the open-source readiness audit (May 2026) for the full list and per-file findings.
+
+## License
+
+Not yet licensed for public use. All rights reserved by the author until a `LICENSE` file is added.
