@@ -1,8 +1,8 @@
-# Future data model
+# Data model
 
-The MVP uses Grafana Tempo as the source of truth for traces. The custom Epoptes API currently has seed data only.
+The MVP uses Grafana Tempo as the source of truth for traces. The custom Epoptes API queries Tempo's HTTP API and maps traces into session summaries for the dashboard.
 
-The next step is an indexer that extracts session summaries from traces into PostgreSQL.
+A future indexer can extract these same session summaries into PostgreSQL for faster search, retention controls, and richer joins.
 
 ## AgentSession
 

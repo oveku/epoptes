@@ -75,10 +75,13 @@ services:
     container_name: epoptes-api
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-epoptes}:${POSTGRES_PASSWORD:-epoptes}@postgres:5432/${POSTGRES_DB:-epoptes}
+      TEMPO_BASE_URL: ${TEMPO_BASE_URL:-http://tempo:3200}
+      TEMPO_QUERY_LIMIT: ${TEMPO_QUERY_LIMIT:-50}
     ports:
       - "${EPOPTES_API_PORT:-8180}:8080"
     depends_on:
       - postgres
+      - tempo
     restart: unless-stopped
 
   web:
