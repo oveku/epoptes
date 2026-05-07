@@ -39,3 +39,16 @@ Epoptes is designed for a trusted LAN. Before running it anywhere reachable from
 5. Consider mounting Tempo / Prometheus volumes on encrypted storage if traces may contain sensitive prompts.
 
 OTLP traces from VS Code can include workspace paths, repository names, and tool arguments. Treat the trace store as sensitive.
+
+## Automated security scans
+
+The repository runs the following scans on every push to `master`, every PR, and weekly via GitHub Actions ([.github/workflows/security.yml](.github/workflows/security.yml)):
+
+| Scanner | Coverage |
+|---------|----------|
+| [Trivy](https://github.com/aquasecurity/trivy) | Filesystem vulnerabilities, misconfigurations |
+| [TruffleHog](https://github.com/trufflesecurity/trufflehog) | Verified leaked credentials in git history |
+| [OSV-Scanner](https://github.com/google/osv-scanner) | Open-source dependency vulnerabilities (OSV database) |
+| [Snyk](https://snyk.io) | Open-source deps + SAST (requires `SNYK_TOKEN` repo secret; skipped if absent) |
+
+Findings are uploaded as SARIF to the repository's Security tab. To enable Snyk, add a `SNYK_TOKEN` secret under **Settings → Secrets and variables → Actions**.
