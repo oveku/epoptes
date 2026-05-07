@@ -18,8 +18,47 @@ A working local stack that can:
 - store traces in Grafana Tempo
 - expose metrics through Prometheus
 - visualize sessions in Grafana
-- provide a small FastAPI service with seed data for a future curated dashboard
+- provide a small FastAPI service that reads real session traces from Tempo
 - provide a React dashboard scaffold for the next development step
+
+## Architecture
+
+```
+VS Code (dev machine)
+  │
+  │  OTLP HTTP (port 4318)
+  ▼
+epoptes-otel-collector
+  ├── traces ──► epoptes-tempo (port 3320)
+  └── metrics ► epoptes-prometheus (port 9190)
+                        │
+                        ▼
+              epoptes-grafana (port 3030)
+
+epoptes-api (port 8180)  ◄──► epoptes-tempo
+       │
+       └──► epoptes-postgres (future index)
+       ▲
+       │ REST
+epoptes-web (port 5174)
+```
+
+| Service | Image | Description |
+|---------|-------|-------------|
+| `otel-collector` | otel/opentelemetry-collector-contrib | Receives OTLP, fans out to Tempo and Prometheus |
+| `tempo` | grafana/tempo | Trace backend; 7-day local retention |
+| `prometheus` | prom/prometheus | Metrics; 7-day TSDB retention |
+| `grafana` | grafana/grafana | Dashboards; pre-provisioned Tempo + Prometheus datasources |
+| `postgres` | postgres:16-alpine | Reserved API database for future indexing |
+| `api` | epoptes-api (built) | FastAPI service that maps Tempo traces into curated sessions and stats |
+| `web` | epoptes-web (built) | React dashboard with stats cards and session table |
+
+## Compose files
+
+| File | Use for |
+|------|---------|
+| `docker-compose.yml` | Local development — builds images from source, exposes postgres port |
+| `docker-compose.san.yml` | Production on San (`192.168.1.124`) — uses pre-built ARM64 images, no exposed postgres |
 
 ## Ports
 
