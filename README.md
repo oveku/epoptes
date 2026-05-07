@@ -56,6 +56,12 @@ admin / admin
 
 Use the LAN address of the server running Epoptes.
 
+Install the client-side VS Code settings on a Windows dev machine:
+
+```powershell
+.\scripts\install-vscode-integration.ps1
+```
+
 ```json
 {
   "github.copilot.chat.otel.enabled": true,
@@ -63,6 +69,12 @@ Use the LAN address of the server running Epoptes.
   "github.copilot.chat.agent.modelDetails.enabled": true,
   "github.copilot.chat.agent.backgroundTodoAgent.enabled": true
 }
+```
+
+Send a synthetic trace to prove the local client path can reach Epoptes:
+
+```powershell
+.\scripts\send-smoke-trace.ps1
 ```
 
 Example for San:

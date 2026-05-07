@@ -6,7 +6,19 @@ Use VS Code 1.119+ for OpenTelemetry tracing from Copilot Chat agent sessions.
 
 ## User settings
 
-Open Command Palette:
+Install from this project:
+
+```powershell
+.\scripts\install-vscode-integration.ps1
+```
+
+The installer backs up and updates:
+
+```text
+C:\Users\<you>\AppData\Roaming\Code\User\settings.json
+```
+
+Manual setup is also possible. Open Command Palette:
 
 ```text
 Preferences: Open User Settings (JSON)
@@ -48,7 +60,14 @@ This keeps filesystem restrictions but removes network domain blocking. Do not e
 
 ## Verification task
 
-Ask an agent to do a tiny task in a harmless repo, for example:
+First send a synthetic client trace:
+
+```powershell
+.\scripts\send-smoke-trace.ps1
+```
+
+Then ask an agent to do a tiny task in a harmless repo, for example:
+
 
 ```text
 Create a README section that explains how to run tests. Do not change code.
@@ -57,13 +76,13 @@ Create a README section that explains how to run tests. Do not change code.
 Then check:
 
 ```bash
-docker logs epoptes-otel-collector --tail 200
+ssh san "sudo docker logs epoptes-otel-collector --tail 200"
 ```
 
 Open Grafana:
 
 ```text
-http://localhost:3030
+http://192.168.1.124:3030
 ```
 
 Use Explore -> Tempo -> Search.
