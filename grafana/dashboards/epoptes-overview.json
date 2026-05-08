@@ -63,7 +63,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "sum(increase(epoptes_copilot_chat_session_count_total[$__range]))",
+          "expr": "sum(increase(epoptes_copilot_chat_session_count_total[$__range] @ end()))",
           "instant": true,
           "refId": "A"
         }
@@ -125,7 +125,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "sum(increase(epoptes_copilot_chat_tool_call_count_total[$__range]))",
+          "expr": "sum(increase(epoptes_copilot_chat_tool_call_count_total[$__range] @ end()))",
           "instant": true,
           "refId": "A"
         }
@@ -195,7 +195,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "sum(increase(epoptes_copilot_chat_tool_call_count_total{success=\"false\"}[$__range]))",
+          "expr": "sum(increase(epoptes_copilot_chat_tool_call_count_total{success=\"false\"}[$__range] @ end()))",
           "instant": true,
           "refId": "A"
         }
@@ -265,7 +265,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "100 * sum(increase(epoptes_copilot_chat_tool_call_count_total{success=\"false\"}[$__range])) / clamp_min(sum(increase(epoptes_copilot_chat_tool_call_count_total[$__range])), 1)",
+          "expr": "100 * sum(increase(epoptes_copilot_chat_tool_call_count_total{success=\"false\"}[$__range] @ end())) / clamp_min(sum(increase(epoptes_copilot_chat_tool_call_count_total[$__range] @ end())), 1)",
           "instant": true,
           "refId": "A"
         }
@@ -327,7 +327,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "sum(increase(epoptes_gen_ai_client_token_usage_sum{gen_ai_token_type=\"input\"}[$__range]))",
+          "expr": "sum(increase(epoptes_gen_ai_client_token_usage_sum{gen_ai_token_type=\"input\"}[$__range] @ end()))",
           "instant": true,
           "refId": "A"
         }
@@ -389,7 +389,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "sum(increase(epoptes_gen_ai_client_token_usage_sum{gen_ai_token_type=\"output\"}[$__range]))",
+          "expr": "sum(increase(epoptes_gen_ai_client_token_usage_sum{gen_ai_token_type=\"output\"}[$__range] @ end()))",
           "instant": true,
           "refId": "A"
         }
@@ -621,7 +621,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "topk(10, sum by (gen_ai_tool_name) (increase(epoptes_copilot_chat_tool_call_count_total[$__range])))",
+          "expr": "topk(10, sum by (gen_ai_tool_name) (increase(epoptes_copilot_chat_tool_call_count_total[$__range] @ end())))",
           "instant": true,
           "legendFormat": "{{gen_ai_tool_name}}",
           "refId": "A"
@@ -683,7 +683,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "topk(10, sum by (gen_ai_tool_name) (increase(epoptes_copilot_chat_tool_call_duration_sum[$__range])) / clamp_min(sum by (gen_ai_tool_name) (increase(epoptes_copilot_chat_tool_call_duration_count[$__range])), 1))",
+          "expr": "topk(10, sum by (gen_ai_tool_name) (increase(epoptes_copilot_chat_tool_call_duration_sum[$__range] @ end())) / clamp_min(sum by (gen_ai_tool_name) (increase(epoptes_copilot_chat_tool_call_duration_count[$__range] @ end())), 1))",
           "instant": true,
           "legendFormat": "{{gen_ai_tool_name}}",
           "refId": "A"
@@ -745,7 +745,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "topk(8, sum by (gen_ai_response_model) (increase(epoptes_gen_ai_client_token_usage_sum{gen_ai_token_type=\"output\"}[$__range])))",
+          "expr": "topk(8, sum by (gen_ai_response_model) (increase(epoptes_gen_ai_client_token_usage_sum{gen_ai_token_type=\"output\"}[$__range] @ end())))",
           "instant": true,
           "legendFormat": "{{gen_ai_response_model}}",
           "refId": "A"
@@ -807,7 +807,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "topk(8, sum by (gen_ai_agent_name) (increase(epoptes_copilot_chat_agent_invocation_duration_count[$__range])))",
+          "expr": "topk(8, sum by (gen_ai_agent_name) (increase(epoptes_copilot_chat_agent_invocation_duration_count[$__range] @ end())))",
           "instant": true,
           "legendFormat": "{{gen_ai_agent_name}}",
           "refId": "A"
