@@ -1,0 +1,184 @@
+# GitHub Copilot model pricing as static recording-rule series.
+#
+# Each rule emits a constant value (USD per 1,000,000 tokens) labelled by
+# (gen_ai_response_model, gen_ai_token_type). Dashboards join this against
+# epoptes_gen_ai_client_token_usage_sum to compute spend.
+#
+# Source: https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing
+# Effective: 2026-06-01 (usage-based billing). 1 AI Credit = $0.01 USD.
+#
+# Update this file when GitHub publishes new rates or models. Models not
+# listed here contribute 0 to cost panels; the "Unpriced tokens" panel surfaces
+# them so they can be added.
+#
+# Token type label values follow OpenTelemetry GenAI semconv:
+#   - "input"  -> per-1M input tokens
+#   - "output" -> per-1M output tokens
+# Cached/cache-write tokens are not yet emitted by VS Code; add them here when
+# the OTel exporter starts reporting them.
+
+groups:
+  - name: copilot_model_pricing
+    interval: 1h
+    rules:
+      # ---------- OpenAI ----------
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(2.00)
+        labels: { gen_ai_response_model: "gpt-4.1", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(8.00)
+        labels: { gen_ai_response_model: "gpt-4.1", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(0.25)
+        labels: { gen_ai_response_model: "gpt-5-mini", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(2.00)
+        labels: { gen_ai_response_model: "gpt-5-mini", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(1.75)
+        labels: { gen_ai_response_model: "gpt-5.2", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(14.00)
+        labels: { gen_ai_response_model: "gpt-5.2", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(1.75)
+        labels: { gen_ai_response_model: "gpt-5.2-codex", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(14.00)
+        labels: { gen_ai_response_model: "gpt-5.2-codex", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(1.75)
+        labels: { gen_ai_response_model: "gpt-5.3-codex", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(14.00)
+        labels: { gen_ai_response_model: "gpt-5.3-codex", gen_ai_token_type: "output" }
+
+      # GPT-5.4 pricing assumes prompts <=272K tokens (long-context surcharge not modelled).
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(2.50)
+        labels: { gen_ai_response_model: "gpt-5.4", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(15.00)
+        labels: { gen_ai_response_model: "gpt-5.4", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(0.75)
+        labels: { gen_ai_response_model: "gpt-5.4-mini", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(4.50)
+        labels: { gen_ai_response_model: "gpt-5.4-mini", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(0.20)
+        labels: { gen_ai_response_model: "gpt-5.4-nano", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(1.25)
+        labels: { gen_ai_response_model: "gpt-5.4-nano", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(5.00)
+        labels: { gen_ai_response_model: "gpt-5.5", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(30.00)
+        labels: { gen_ai_response_model: "gpt-5.5", gen_ai_token_type: "output" }
+
+      # ---------- Anthropic ----------
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(1.00)
+        labels: { gen_ai_response_model: "claude-haiku-4.5", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(5.00)
+        labels: { gen_ai_response_model: "claude-haiku-4.5", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(3.00)
+        labels: { gen_ai_response_model: "claude-sonnet-4", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(15.00)
+        labels: { gen_ai_response_model: "claude-sonnet-4", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(3.00)
+        labels: { gen_ai_response_model: "claude-sonnet-4.5", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(15.00)
+        labels: { gen_ai_response_model: "claude-sonnet-4.5", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(3.00)
+        labels: { gen_ai_response_model: "claude-sonnet-4.6", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(15.00)
+        labels: { gen_ai_response_model: "claude-sonnet-4.6", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(5.00)
+        labels: { gen_ai_response_model: "claude-opus-4.5", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(25.00)
+        labels: { gen_ai_response_model: "claude-opus-4.5", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(5.00)
+        labels: { gen_ai_response_model: "claude-opus-4.6", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(25.00)
+        labels: { gen_ai_response_model: "claude-opus-4.6", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(5.00)
+        labels: { gen_ai_response_model: "claude-opus-4.7", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(25.00)
+        labels: { gen_ai_response_model: "claude-opus-4.7", gen_ai_token_type: "output" }
+
+      # ---------- Google ----------
+      # Gemini 2.5 Pro / 3.1 Pro pricing assumes prompts <=200K tokens.
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(1.25)
+        labels: { gen_ai_response_model: "gemini-2.5-pro", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(10.00)
+        labels: { gen_ai_response_model: "gemini-2.5-pro", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(0.50)
+        labels: { gen_ai_response_model: "gemini-3-flash", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(3.00)
+        labels: { gen_ai_response_model: "gemini-3-flash", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(2.00)
+        labels: { gen_ai_response_model: "gemini-3.1-pro", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(12.00)
+        labels: { gen_ai_response_model: "gemini-3.1-pro", gen_ai_token_type: "output" }
+
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(1.50)
+        labels: { gen_ai_response_model: "gemini-3.5-flash", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(9.00)
+        labels: { gen_ai_response_model: "gemini-3.5-flash", gen_ai_token_type: "output" }
+
+      # ---------- Fine-tuned (GitHub) ----------
+      # Raptor mini -> GPT-5 mini pricing.
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(0.25)
+        labels: { gen_ai_response_model: "raptor-mini", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(2.00)
+        labels: { gen_ai_response_model: "raptor-mini", gen_ai_token_type: "output" }
+
+      # Goldeneye -> GPT-5.1-Codex pricing (treated as gpt-5.2-codex equivalent).
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(1.25)
+        labels: { gen_ai_response_model: "goldeneye", gen_ai_token_type: "input" }
+      - record: epoptes_model_price_usd_per_million_tokens
+        expr: vector(10.00)
+        labels: { gen_ai_response_model: "goldeneye", gen_ai_token_type: "output" }

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Grafana dashboard `Copilot Cost` (`grafana/dashboards/copilot-cost.json`) showing estimated USD spend and AI Credit consumption from emitted token metrics
+- Prometheus recording rules at `prometheus/rules/copilot-pricing.yml` encoding per-model GitHub Copilot pricing under the June 2026 usage-based billing model
 - `LICENSE` (MIT)
 - `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`
 - Roadmap to public release in `README.md`
