@@ -34,6 +34,7 @@ services:
       - "--storage.tsdb.retention.time=7d"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
       - prometheus-data:/prometheus
     ports:
       - "${EPOPTES_PROMETHEUS_PORT:-9190}:9090"
